@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mini Evento Agenda Previsível</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: a semana como estrutura — bandas vinho escuras alternando com uma pausa clara; a "agenda" é o objeto-prova da página. */
+:root{
+  --vinho:#3B101D; --vinho-escuro:#210C13; --vinho-borda:#4E1A29;
+  --laranja:#FF4D00; --claro:#F5F3ED; --preto:#121212;
+  --apoio:rgba(245,243,237,.72); --linha:rgba(245,243,237,.16); --fraco:rgba(245,243,237,.5);
+  --f-display:"Anton","Impact","Arial Narrow",sans-serif;
+  --f-corpo:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--vinho-escuro);color:var(--claro);font-family:var(--f-corpo);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band{padding-block:clamp(64px,9vw,112px)}
+.band.vinho{background:var(--vinho)}
+.band.claro{background:var(--claro);color:var(--vinho)}
+h1,h2,.display{font-family:var(--f-display);font-weight:400;text-transform:uppercase;line-height:1.08;letter-spacing:.005em;text-wrap:balance;margin:0}
+h1{font-size:clamp(46px,8.4vw,104px)}
+h2{font-size:clamp(34px,5vw,60px)}
+h3{font-size:19px;font-weight:800;margin:0;line-height:1.3}
+p{margin:0}
+.eb{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--laranja)}
+.claro .eb{color:var(--vinho);opacity:.75}
+.lead{font-size:clamp(18px,2vw,21px);color:var(--apoio);max-width:60ch}
+.claro .lead{color:rgba(59,16,29,.8)}
+.hl{color:var(--laranja)}
+.stack{display:flex;flex-direction:column;gap:20px}
+
+/* Botão V7: laranja + texto vinho + corte diagonal */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;background:var(--laranja);color:var(--vinho);text-decoration:none;font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:16px;min-height:60px;padding:0 32px;clip-path:polygon(0 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%);transition:transform .15s ease,filter .15s ease}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.btn:focus-visible{outline:3px solid var(--claro);outline-offset:4px}
+.btn .seta{font-size:20px;line-height:1}
+.cta-nota{font-size:14px;color:var(--fraco)}
+
+/* Pendências de preview */
+.pend{border-bottom:2px dashed var(--laranja)}
+.aviso{background:var(--preto);color:var(--apoio);font-size:13px;padding-block:10px}
+.aviso .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.aviso b{color:var(--laranja);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+
+/* Header */
+header{padding-block:24px}
+header .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.logo{width:180px;height:auto;display:block}
+.tag-evento{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--apoio);text-align:right}
+
+/* Hero */
+.hero{padding-block:clamp(32px,6vw,72px) clamp(64px,9vw,104px)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(32px,5vw,64px);align-items:center}
+.hero-txt{display:flex;flex-direction:column;gap:26px;min-width:0}
+.fatos{display:flex;flex-wrap:wrap;gap:10px 28px;font-size:15px;color:var(--apoio)}
+.fatos span b{color:var(--claro);font-weight:700}
+.hero-cta{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+
+/* Agenda — objeto-prova */
+.agenda{background:var(--vinho);border:1px solid var(--vinho-borda);padding:22px;min-width:0;clip-path:polygon(0 0,100% 0,100% calc(100% - 28px),calc(100% - 28px) 100%,0 100%)}
+.agenda-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;gap:8px}
+.agenda-top p{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--fraco)}
+.agenda-top .semana{color:var(--claro)}
+.dias{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.dia{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dia>span{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--fraco);text-align:center;padding-bottom:4px;border-bottom:1px solid var(--linha)}
+.slot{height:30px;border:1px dashed var(--linha)}
+.slot.ev{background:var(--laranja);border:0;height:auto;padding:8px 6px;color:var(--vinho);font-size:11px;font-weight:800;line-height:1.2;text-transform:uppercase;letter-spacing:.04em}
+.slot.r{background:rgba(245,243,237,.1);border:1px solid var(--linha);font-size:10.5px;font-weight:700;color:var(--claro);display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden}
+.slot.r::before{content:"";width:6px;height:6px;background:var(--laranja);margin-right:5px;flex:none}
+.agenda-legenda{margin-top:16px;display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--apoio);flex-wrap:wrap}
+.agenda-legenda b{color:var(--claro)}
+
+/* Faixa laranja */
+.faixa{background:var(--laranja);color:var(--vinho);padding-block:28px}
+.faixa p{font-family:var(--f-display);text-transform:uppercase;font-size:clamp(24px,3.6vw,40px);line-height:1.12;text-wrap:balance}
+
+/* Identificação */
+.dois{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:clamp(32px,6vw,80px);align-items:start}
+.lista-dor{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.lista-dor li{padding:18px 0;border-top:1px solid var(--linha);display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;font-size:18px}
+.lista-dor li:last-child{border-bottom:1px solid var(--linha)}
+.lista-dor li::before{content:"×";color:var(--laranja);font-weight:800;font-size:22px;line-height:1.2}
+.quadro{margin-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px}
+.quadro div{background:var(--vinho);padding:20px;display:flex;flex-direction:column;gap:8px}
+.quadro .k{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--fraco)}
+.quadro .v{font-size:17px;font-weight:600}
+.quadro .verdade .k{color:var(--laranja)}
+
+/* Mecanismo (seção clara) */
+.passos{list-style:none;margin:48px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;background:rgba(59,16,29,.15)}
+.passos li{background:var(--claro);padding:28px 24px 32px;display:flex;flex-direction:column;gap:14px}
+.passos .n{font-family:var(--f-display);font-size:56px;line-height:1;color:var(--laranja)}
+.passos p{color:rgba(59,16,29,.82)}
+.troca{font-size:14px;font-weight:700;color:var(--vinho);border-top:1px solid rgba(59,16,29,.2);padding-top:12px;margin-top:auto}
+.troca s{opacity:.55}
+
+/* A conta */
+.conta{margin-top:56px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid rgba(59,16,29,.25)}
+.conta div{padding:24px 20px;border-right:1px solid rgba(59,16,29,.25);display:flex;flex-direction:column;gap:6px}
+.conta div:last-child{border-right:0;background:var(--vinho);color:var(--claro)}
+.conta .num{font-family:var(--f-display);font-size:clamp(40px,5vw,60px);line-height:1;font-variant-numeric:tabular-nums}
+.conta div:last-child .num{color:var(--laranja)}
+.conta .rot{font-size:14px;font-weight:600}
+.conta-nota{margin-top:14px;font-size:14px;color:rgba(59,16,29,.72);max-width:70ch}
+
+/* Programação */
+.prog{list-style:none;margin:48px 0 0;padding:0;border-top:1px solid var(--linha)}
+.prog li{display:grid;grid-template-columns:120px minmax(0,1fr) minmax(0,1.3fr);gap:24px;padding:26px 0;border-bottom:1px solid var(--linha);align-items:baseline}
+.prog .bloco{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--laranja)}
+.prog h3{font-size:21px}
+.prog p{color:var(--apoio)}
+.leva{margin-top:40px;background:var(--vinho);padding:28px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:start}
+.leva .display{font-size:28px;color:var(--laranja)}
+.leva ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 28px}
+.leva li{display:flex;gap:10px}
+.leva li::before{content:"✓";color:var(--laranja);font-weight:800}
+
+/* Provas */
+.provas{margin-top:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;background:var(--linha)}
+.prova{background:var(--vinho-escuro);padding:28px 24px;display:flex;flex-direction:column;gap:10px}
+.prova .num{font-family:var(--f-display);font-size:clamp(48px,6vw,72px);line-height:1;color:var(--claro)}
+.prova .num small{font-size:.5em;color:var(--laranja);margin-left:4px}
+.prova p{color:var(--apoio);font-size:16px}
+.prova .quem{margin-top:auto;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fraco)}
+.prova .quem.pend{color:var(--laranja);border-bottom:0}
+.depo-slot{margin-top:2px;border:1px dashed var(--linha);padding:20px 24px;color:var(--fraco);font-size:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* Oferta */
+.oferta{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:clamp(32px,5vw,64px);align-items:center}
+.ingresso{background:var(--vinho-escuro);border:1px solid var(--vinho-borda);padding:32px;display:flex;flex-direction:column;gap:20px;clip-path:polygon(0 0,100% 0,100% calc(100% - 28px),calc(100% - 28px) 100%,0 100%)}
+.ingresso .topo{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--fraco);border-bottom:1px dashed var(--linha);padding-bottom:16px}
+.preco{font-family:var(--f-display);font-size:88px;line-height:1;color:var(--claro);display:flex;align-items:flex-start;gap:8px}
+.preco sup{font-size:28px;margin-top:10px;color:var(--laranja)}
+.inclui{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:16px}
+.inclui li{display:flex;gap:10px}
+.inclui li::before{content:"✓";color:var(--laranja);font-weight:800}
+.ingresso .btn{width:100%}
+
+/* Autoridade */
+.autor{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:clamp(32px,6vw,72px);align-items:center}
+.foto{aspect-ratio:4/5;max-width:100%;border:1px dashed var(--linha);display:flex;align-items:flex-end;padding:20px;color:var(--fraco);font-size:14px;background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(245,243,237,.03) 14px 28px);clip-path:polygon(0 0,100% 0,100% calc(100% - 40px),calc(100% - 40px) 100%,0 100%)}
+.numeros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;border-top:1px solid var(--linha);padding-top:24px}
+.numeros .num{font-family:var(--f-display);font-size:40px;line-height:1;color:var(--laranja)}
+.numeros p{font-size:14px;color:var(--apoio);margin-top:6px}
+.citacao{font-size:19px;font-weight:600;border-left:3px solid var(--laranja);padding-left:18px;max-width:52ch}
+
+/* Para quem é */
+.pq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;margin-top:40px;background:rgba(59,16,29,.15)}
+.pq>div{background:var(--claro);padding:28px;display:flex;flex-direction:column;gap:16px}
+.pq ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
+.pq li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;color:rgba(59,16,29,.88)}
+.pq .sim li::before{content:"✓";color:var(--laranja);font-weight:800}
+.pq .nao li::before{content:"×";color:var(--vinho);font-weight:800;opacity:.6}
+.pq h3{font-size:15px;letter-spacing:.1em;text-transform:uppercase}
+
+/* FAQ */
+.faq{margin-top:40px;border-top:1px solid var(--linha);max-width:820px}
+.faq details{border-bottom:1px solid var(--linha)}
+.faq summary{list-style:none;cursor:pointer;padding:22px 40px 22px 0;font-weight:700;font-size:18px;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:4px;top:18px;font-size:26px;color:var(--laranja);font-weight:500;transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq summary:focus-visible{outline:2px solid var(--laranja);outline-offset:2px}
+.faq details p{padding:0 0 22px;color:var(--apoio);max-width:68ch}
+
+/* Final */
+.final{text-align:left}
+.final .stack{max-width:780px}
+footer{padding-block:32px;border-top:1px solid var(--linha);font-size:13px;color:var(--fraco)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+footer .logo{width:130px}
+
+@media (max-width:900px){
+  .hero-grid,.dois,.oferta,.autor{grid-template-columns:minmax(0,1fr)}
+  .passos,.provas{grid-template-columns:minmax(0,1fr)}
+  .conta{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .conta div:nth-child(2){border-right:0}
+  .conta div:nth-child(-n+2){border-bottom:1px solid rgba(59,16,29,.25)}
+  .prog li{grid-template-columns:minmax(0,1fr);gap:8px}
+  .leva{grid-template-columns:minmax(0,1fr)}
+  .leva ul{grid-template-columns:minmax(0,1fr)}
+  .pq{grid-template-columns:minmax(0,1fr)}
+  .autor .foto{max-width:320px}
+}
+@media (max-width:480px){
+  .logo{width:150px}
+  .tag-evento{display:none}
+  .btn{width:100%;padding:0 20px}
+  .hero-cta{align-items:stretch}
+  .quadro{grid-template-columns:minmax(0,1fr)}
+  .numeros{grid-template-columns:minmax(0,1fr)}
+  .slot.r{font-size:9.5px;padding:0 4px}
+  .slot.r::before{display:none}
+  .agenda{padding:16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (prefers-reduced-motion:no-preference){
+  .slot.r{animation:entra .5s ease both}
+  .d2 .slot.r{animation-delay:.15s}.d3 .slot.r{animation-delay:.3s}.d4 .slot.r{animation-delay:.45s}
+  @keyframes entra{from{transform:translateY(4px)}to{transform:none}}
+}
+</style>
+
+</head>
+<body>
+<div class="aviso" role="note"><div class="wrap"><b>Preview</b><span>Trechos sublinhados em tracejado laranja são dados a confirmar antes de publicar (data, preço, checkout, nomes das provas).</span></div></div>
+
+<header>
+  <div class="wrap">
+    <a href="#topo" aria-label="Reino Vendas &amp; IA"><svg xmlns="http://www.w3.org/2000/svg" class="logo" viewBox="0 0 405 120" role="img" aria-label="Reino Vendas &amp; IA"><title>Reino Vendas &amp; IA</title><g transform="translate(0 5) scale(1.2)"><g fill="#F5F3ED"><path d="M12 72V12H68V44H44V28H28V72Z"/><path d="M40 48H56L76 72H54L40 56Z"/></g></g><g fill="#F5F3ED"><path d="M121.25 80.0V26.0H144.05Q144.8375 26.0 146.16875 26.056250000000002Q147.5 26.112500000000004 148.55 26.300000000000004Q153.3875 27.050000000000004 156.48125 29.487500000000004Q159.575 31.925000000000004 161.0375 35.618750000000006Q162.5 39.3125 162.5 43.85Q162.5 50.6375 159.125 55.456250000000004Q155.75 60.275000000000006 148.55 61.400000000000006L144.05 61.7H131.45V80.0ZM151.7 80.0 141.05 58.025000000000006 151.55 56.0 163.25 80.0ZM131.45 52.175H143.6Q144.3875 52.175 145.325 52.1Q146.2625 52.025000000000006 147.05 51.8Q149.1125 51.2375 150.2375 49.90625Q151.3625 48.575 151.79375 46.94375Q152.225 45.3125 152.225 43.85Q152.225 42.3875 151.79375 40.75625Q151.3625 39.125 150.2375 37.79375Q149.1125 36.4625 147.05 35.9Q146.2625 35.675000000000004 145.325 35.6Q144.3875 35.525 143.6 35.525H131.45Z"/><path d="M172.7 80.0V26.0H207.95V35.525H182.89999999999998V47.075H203.45V56.6H182.89999999999998V70.475H207.95V80.0Z"/><path d="M218.89999999999998 80.0V26.0H229.09999999999997V80.0Z"/><path d="M241.54999999999998 80.0V26.0H251.89999999999998L275.375 62.0V26.0H285.72499999999997V80.0H275.375L251.89999999999998 44.0V80.0Z"/><path d="M320.59999999999997 81.125Q312.49999999999994 81.125 306.6312499999999 77.6Q300.76249999999993 74.075 297.59374999999994 67.73750000000001Q294.42499999999995 61.400000000000006 294.42499999999995 53.0Q294.42499999999995 44.6 297.59374999999994 38.2625Q300.76249999999993 31.925000000000004 306.6312499999999 28.400000000000002Q312.49999999999994 24.875 320.59999999999997 24.875Q328.69999999999993 24.875 334.5687499999999 28.400000000000002Q340.43749999999994 31.925000000000004 343.60624999999993 38.2625Q346.775 44.6 346.775 53.0Q346.775 61.400000000000006 343.60624999999993 67.73750000000001Q340.43749999999994 74.075 334.5687499999999 77.6Q328.69999999999993 81.125 320.59999999999997 81.125ZM320.59999999999997 71.525Q325.73749999999995 71.6 329.15 69.3125Q332.56249999999994 67.025 334.26874999999995 62.825Q335.97499999999997 58.625 335.97499999999997 53.0Q335.97499999999997 47.375 334.26874999999995 43.25Q332.56249999999994 39.125 329.15 36.837500000000006Q325.73749999999995 34.550000000000004 320.59999999999997 34.475Q315.4625 34.4 312.04999999999995 36.6875Q308.63749999999993 38.975 306.93125 43.175Q305.22499999999997 47.375 305.22499999999997 53.0Q305.22499999999997 58.625 306.93125 62.75Q308.63749999999993 66.875 312.04999999999995 69.1625Q315.4625 71.45 320.59999999999997 71.525Z"/></g><g fill="#F5F3ED"><path d="M123.346 108.0 120.07 97.92H121.589L124.382 106.523L127.21 97.92H128.729L125.453 108.0Z"/><path d="M133.279 108.0V97.92H139.719V99.299H134.74200000000002V102.127H138.87900000000002V103.506H134.74200000000002V106.621H139.719V108.0Z"/><path d="M144.899 108.0V97.92H146.383L151.346 105.41V97.92H152.83V108.0H151.346L146.383 100.503V108.0Z"/><path d="M158.29 108.0V97.92H161.447Q161.587 97.92 161.9685 97.92699999999999Q162.35 97.934 162.7 97.983Q163.883 98.13 164.69150000000002 98.83Q165.5 99.53 165.913 100.6045Q166.326 101.679 166.326 102.96Q166.326 104.248 165.913 105.3225Q165.5 106.397 164.69150000000002 107.0935Q163.883 107.79 162.7 107.937Q162.35 107.986 161.9685 107.993Q161.587 108.0 161.447 108.0ZM159.788 106.607H161.447Q161.685 106.607 162.014 106.59299999999999Q162.343 106.579 162.595 106.537Q163.365 106.39 163.8445 105.8685Q164.324 105.347 164.548 104.584Q164.772 103.821 164.772 102.96Q164.772 102.071 164.541 101.3115Q164.31 100.55199999999999 163.8305 100.0375Q163.351 99.523 162.595 99.383Q162.343 99.334 162.01049999999998 99.3235Q161.678 99.313 161.447 99.313H159.788Z"/><path d="M170.757 108.0 174.03300000000002 97.92H176.14000000000001L179.416 108.0H177.897L174.88 98.80199999999999H175.258L172.276 108.0ZM172.458 105.725V104.353H177.722V105.725Z"/><path d="M187.82999999999998 108.21Q186.745 108.21 185.8735 107.8355Q185.002 107.461 184.4385 106.7645Q183.875 106.068 183.707 105.109L185.233 104.878Q185.464 105.802 186.199 106.3165Q186.934 106.831 187.914 106.831Q188.523 106.831 189.034 106.6385Q189.545 106.446 189.85649999999998 106.0855Q190.168 105.725 190.168 105.221Q190.168 104.948 190.0735 104.738Q189.97899999999998 104.528 189.8145 104.37049999999999Q189.65 104.213 189.4155 104.0975Q189.181 103.982 188.901 103.898L186.31799999999998 103.135Q185.94 103.023 185.548 102.8445Q185.156 102.666 184.8305 102.37549999999999Q184.505 102.085 184.302 101.6545Q184.099 101.224 184.099 100.608Q184.099 99.67699999999999 184.5785 99.0295Q185.058 98.382 185.877 98.0495Q186.696 97.717 187.71099999999998 97.717Q188.733 97.731 189.54149999999998 98.08099999999999Q190.35 98.431 190.88549999999998 99.0855Q191.421 99.74 191.624 100.671L190.056 100.937Q189.951 100.37 189.608 99.9605Q189.265 99.551 188.76799999999997 99.3305Q188.271 99.11 187.69 99.103Q187.13 99.089 186.6645 99.271Q186.199 99.453 185.9225 99.78200000000001Q185.646 100.111 185.646 100.538Q185.646 100.958 185.891 101.217Q186.136 101.476 186.4965 101.6265Q186.857 101.777 187.214 101.875L189.076 102.4Q189.426 102.498 189.8705 102.6625Q190.315 102.827 190.73149999999998 103.12100000000001Q191.148 103.415 191.421 103.9015Q191.694 104.388 191.694 105.123Q191.694 105.886 191.386 106.4635Q191.078 107.041 190.54250000000002 107.42949999999999Q190.007 107.818 189.30700000000002 108.014Q188.607 108.21 187.82999999999998 108.21Z"/><path d=""/><path d="M206.296 108.21Q205.44899999999998 108.21 204.714 107.9615Q203.97899999999998 107.713 203.482 107.181Q203.097 106.754 202.9115 106.23949999999999Q202.726 105.725 202.70499999999998 105.144Q202.70499999999998 104.577 202.8695 104.0415Q203.034 103.506 203.391 103.086Q203.552 102.89 203.748 102.7465Q203.944 102.603 204.14 102.491Q203.692 102.001 203.461 101.5565Q203.23 101.112 203.23 100.503Q203.23 99.649 203.678 98.9665Q204.126 98.28399999999999 204.903 97.983Q205.26 97.836 205.631 97.7835Q206.002 97.731 206.352 97.731Q206.982 97.731 207.57 97.913Q208.158 98.095 208.578 98.508Q208.844 98.753 209.02949999999998 99.061Q209.215 99.369 209.313 99.691L207.871 100.027Q207.752 99.691 207.47899999999998 99.46Q207.248 99.257 206.9435 99.18350000000001Q206.639 99.11 206.338 99.11Q205.841 99.11 205.442 99.299Q205.078 99.474 204.89600000000002 99.77850000000001Q204.714 100.083 204.714 100.51Q204.714 100.888 204.84699999999998 101.119Q204.98 101.35 205.204 101.602Q205.337 101.749 205.52249999999998 101.917Q205.708 102.085 205.904 102.267L208.648 104.822Q208.662 104.668 208.66899999999998 104.493Q208.676 104.318 208.676 104.157L208.66899999999998 102.848H209.978V104.577Q209.978 105.018 209.95350000000002 105.3715Q209.929 105.725 209.86599999999999 105.949L211.126 107.118L210.18099999999998 108.133L209.166 107.167Q208.844 107.489 208.445 107.7095Q208.046 107.93 207.64 108.035Q207.297 108.14 206.9645 108.175Q206.632 108.21 206.296 108.21ZM206.338 106.81Q206.618 106.81 206.856 106.77850000000001Q207.094 106.747 207.311 106.656Q207.605 106.537 207.7905 106.411Q207.976 106.285 208.102 106.166L205.232 103.534Q205.015 103.611 204.8295 103.73349999999999Q204.644 103.856 204.511 104.017Q204.35 104.22 204.2695 104.48949999999999Q204.189 104.759 204.196 105.067Q204.196 105.403 204.3045 105.6795Q204.41299999999998 105.956 204.588 106.173Q204.868 106.509 205.36849999999998 106.65950000000001Q205.869 106.81 206.338 106.81Z"/><path d=""/><path d="M222.20000000000002 108.0V97.92H223.663V108.0Z"/><path d="M228.56300000000002 108.0 231.83900000000003 97.92H233.94600000000003L237.222 108.0H235.703L232.686 98.80199999999999H233.06400000000002L230.08200000000002 108.0ZM230.264 105.725V104.353H235.52800000000002V105.725Z"/></g></svg></a>
+    <p class="tag-evento">Mini Evento · Online e ao vivo</p>
+  </div>
+</header>
+
+<main id="topo">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-txt">
+      <p class="eb">Mini Evento Agenda Previsível · para quem vende high ticket</p>
+      <h1>Pare de depender de <span class="hl">indicação.</span></h1>
+      <p class="lead">Em uma noite ao vivo, você desenha o comercial de eventos semanais do seu negócio: quem chamar, como qualificar e como cada evento vira reunião 1×1 com quem tem perfil. Sem lançamento de 60 dias e sem evento caro.</p>
+      <div class="fatos">
+        <span>Data <b class="pend">[a confirmar]</b></span>
+        <span>Horário <b class="pend">[a confirmar]</b></span>
+        <span>Formato <b>online, ao vivo</b></span>
+      </div>
+      <div class="hero-cta">
+        <a class="btn js-checkout" href="#checkout">Quero meu ingresso <span class="seta" aria-hidden="true">→</span></a>
+        <p class="cta-nota">Ingresso <span class="pend">R$ 47</span> · pagamento seguro no checkout</p>
+      </div>
+    </div>
+
+    <figure class="agenda" aria-label="Exemplo de semana: o mini evento na quarta e as reuniões 1×1 nos dias seguintes" style="margin:0">
+      <div class="agenda-top"><p class="semana">Sua semana com o SCP™</p><p>Exemplo</p></div>
+      <div class="dias">
+        <div class="dia"><span>SEG</span><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+        <div class="dia"><span>TER</span><div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>
+        <div class="dia"><span>QUA</span><div class="slot"></div><div class="slot"></div><div class="slot ev">Mini evento · 20h</div></div>
+        <div class="dia d2"><span>QUI</span><div class="slot r">1×1 · 10h</div><div class="slot r">1×1 · 11h</div><div class="slot r">1×1 · 14h</div><div class="slot r">1×1 · 16h</div></div>
+        <div class="dia d3"><span>SEX</span><div class="slot r">1×1 · 10h</div><div class="slot r">1×1 · 14h</div><div class="slot r">1×1 · 15h</div><div class="slot"></div></div>
+      </div>
+      <figcaption class="agenda-legenda"><span><b>1 evento</b> pequeno por semana</span><span><b>Reuniões</b> só com quem tem perfil</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="faixa"><div class="wrap"><p>Indicação não é estratégia. Previsibilidade vem de evento semanal e processo comercial.</p></div></div>
+
+<section class="band">
+  <div class="wrap dois">
+    <div class="stack">
+      <p class="eb">Se isso é você</p>
+      <h2>Você tem autoridade. O que falta é <span class="hl">processo.</span></h2>
+      <p class="lead">Você é médico, advogado, engenheiro, consultor ou empresário. Vende mentoria, consultoria ou serviço de alto valor. Entrega bem. E mesmo assim olha para o mês que vem e não sabe de onde vêm as próximas vendas.</p>
+    </div>
+    <div class="stack">
+      <ul class="lista-dor">
+        <li>Sua agenda depende de quem lembrou de te indicar.</li>
+        <li>Já investiu em tráfego e criativo e não viu venda do outro lado.</li>
+        <li>Tentou lançamento de 30 ou 60 dias e terminou exausto.</li>
+        <li>O funil manda lead para o WhatsApp, mas chega gente sem perfil.</li>
+      </ul>
+      <div class="quadro">
+        <div><p class="k">O que parece</p><p class="v">Criativo ruim, captação errada, funil errado.</p></div>
+        <div class="verdade"><p class="k">O que realmente é</p><p class="v">Falta um processo comercial com ritmo e número. O funil é sintoma.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band claro" id="metodo">
+  <div class="wrap">
+    <div class="stack">
+      <p class="eb">O que você vai desenhar na noite</p>
+      <h2>Sistema Comercial Previsível™</h2>
+      <p class="lead">Três peças que trocam o esforço de um lançamento por um ritmo semanal que você consegue sustentar e medir.</p>
+    </div>
+    <ol class="passos">
+      <li><span class="n">1</span><h3>Mini evento semanal</h3><p>Um encontro pequeno e frequente, com ingresso baixo, que capta e já qualifica quem tem interesse real.</p><p class="troca"><s>Lançamento de 60 dias</s> → 1 noite por semana</p></li>
+      <li><span class="n">2</span><h3>Agenda de diagnóstico 1×1</h3><p>Cada evento termina em reuniões individuais com quem tem perfil. Você para de conversar com curioso.</p><p class="troca"><s>Lead frio no WhatsApp</s> → reunião marcada</p></li>
+      <li><span class="n">3</span><h3>Fechamento com número</h3><p>Processo de call, proposta e acompanhamento semanal de comparecimento e conversão. Toda segunda você sabe onde está.</p><p class="troca"><s>Achismo</s> → número toda segunda</p></li>
+    </ol>
+
+    <div class="conta" aria-label="Exemplo da conta da agenda">
+      <div><span class="num">58</span><span class="rot">agendamentos na semana</span></div>
+      <div><span class="num">70%</span><span class="rot">comparecem</span></div>
+      <div><span class="num">40</span><span class="rot">reuniões realizadas</span></div>
+      <div><span class="num">3 em 10</span><span class="rot">fechamentos</span></div>
+    </div>
+    <p class="conta-nota"><b>Matemática &gt; Motivação™.</b> Exemplo de como a conta da agenda é feita, não promessa de resultado. No evento você monta a conta com os números do seu negócio.</p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="stack">
+      <p class="eb">Programação da noite</p>
+      <h2>Uma noite. <span class="hl">Quatro blocos.</span></h2>
+    </div>
+    <ol class="prog">
+      <li><span class="bloco">Bloco 1</span><h3>O diagnóstico do Refém da Indicação</h3><p>Por que mais tráfego, mais criativo ou um lançamento maior não resolve a falta de processo.</p></li>
+      <li><span class="bloco">Bloco 2</span><h3>O seu mini evento semanal</h3><p>Tema, formato, ingresso e o que acontece em cada parte para o evento já qualificar quem está na sala.</p></li>
+      <li><span class="bloco">Bloco 3</span><h3>Do evento para a agenda 1×1</h3><p>Como conduzir o fim do evento para que quem tem perfil peça a reunião, sem pressão.</p></li>
+      <li><span class="bloco">Bloco 4</span><h3>A conta da sua agenda</h3><p>Quantas reuniões você precisa por semana, quantos agendamentos isso exige e onde o seu funil vaza hoje.</p></li>
+    </ol>
+    <div class="leva">
+      <p class="display">Você sai com</p>
+      <ul>
+        <li>O desenho do seu mini evento semanal</li>
+        <li>A conta de reuniões da sua agenda</li>
+        <li>O roteiro de passagem do evento para a 1×1</li>
+        <li>A régua para separar quem tem perfil de quem não tem</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="band vinho">
+  <div class="wrap">
+    <div class="stack">
+      <p class="eb">Quem já aplicou</p>
+      <h2>O que acontece quando o comercial ganha <span class="hl">ritmo.</span></h2>
+      <p class="lead">Resultados de clientes. Cada negócio tem seu ponto de partida, por isso não prometemos número: mostramos o que o processo já produziu.</p>
+    </div>
+    <div class="provas">
+      <div class="prova"><p class="num">570<small>mil</small></p><p>vendidos no primeiro mês aplicando o mini evento.</p><p class="quem pend">[Nome, nicho e print]</p></div>
+      <div class="prova"><p class="num">48<small>mil</small></p><p>vendidos nos primeiros 15 dias com mini evento.</p><p class="quem pend">[Nome, nicho e print]</p></div>
+      <div class="prova"><p class="num">2<small>MM</small></p><p>vendidos no ano com webinário.</p><p class="quem pend">[Nome, nicho e print]</p></div>
+    </div>
+    <div class="depo-slot"><span>+100 depoimentos de clientes</span><span class="pend">[Inserir 2 ou 3 vídeos ou prints reais]</span></div>
+  </div>
+</section>
+
+<section class="band" id="checkout">
+  <div class="wrap oferta">
+    <div class="stack">
+      <p class="eb">Ingresso</p>
+      <h2>Uma noite para sair com o seu comercial <span class="hl">desenhado.</span></h2>
+      <p class="lead">O ingresso é baixo de propósito. Quem já gastou em lançamento e evento caro precisa ver o processo funcionando antes de decidir qualquer coisa maior.</p>
+      <p class="lead">No fim do evento, quem tiver perfil pode agendar uma sessão 1×1 com o time para aplicar o sistema no próprio negócio. É opcional e a gente avisa desde já.</p>
+    </div>
+    <div class="ingresso">
+      <div class="topo"><span>Mini Evento Agenda Previsível</span><span>Online</span></div>
+      <p class="preco"><sup>R$</sup><span class="pend">47</span></p>
+      <ul class="inclui">
+        <li>Evento ao vivo com Mateus Menezes</li>
+        <li>Os 4 blocos da programação</li>
+        <li>Sua conta da agenda montada na hora</li>
+        <li>Acesso ao grupo de participantes</li>
+      </ul>
+      <a class="btn js-checkout" href="#checkout">Quero meu ingresso <span class="seta" aria-hidden="true">→</span></a>
+      <p class="cta-nota">Data <span class="pend">[a confirmar]</span> · Link de acesso enviado após a compra</p>
+    </div>
+  </div>
+</section>
+
+<section class="band vinho">
+  <div class="wrap autor">
+    <div class="foto" role="img" aria-label="Espaço para foto real do Mateus conduzindo um evento"><span class="pend">[Foto real do Mateus em evento]</span></div>
+    <div class="stack">
+      <p class="eb">Quem conduz</p>
+      <h2>Mateus Menezes</h2>
+      <p class="lead">Fundador da Reino Vendas &amp; IA e criador do Sistema Comercial Previsível™. Começou com R$ 3 mil emprestados: vendeu 24 ingressos em 4 dias e, desses 24, seis compraram a mentoria. Repetiu na semana seguinte e não parou mais.</p>
+      <p class="citacao">“Qualquer coisa que me afaste de Deus não vale qualquer dinheiro.”</p>
+      <div class="numeros">
+        <div><p class="num">120</p><p>eventos realizados, 80 presenciais e 40 online</p></div>
+        <div><p class="num">2.500+</p><p>pessoas treinadas</p></div>
+        <div><p class="num">6 anos</p><p>de marketing digital, palestrante no evento anual da Eduzz</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band claro">
+  <div class="wrap">
+    <div class="stack">
+      <p class="eb">Antes de comprar</p>
+      <h2>Para quem é. E para quem não é.</h2>
+    </div>
+    <div class="pq">
+      <div class="sim"><h3>É para você se</h3><ul>
+        <li>Vende mentoria, consultoria ou serviço de alto valor.</li>
+        <li>Já fatura, mas a agenda ainda depende de indicação.</li>
+        <li>Quer um ritmo semanal que dá para medir e repetir.</li>
+      </ul></div>
+      <div class="nao"><h3>Não é para você se</h3><ul>
+        <li>Vende curso ou produto de baixo valor.</li>
+        <li>Procura uma fórmula de dinheiro rápido.</li>
+        <li>Não quer conversar com cliente em reunião.</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="stack">
+      <p class="eb">Perguntas frequentes</p>
+      <h2>Dúvidas comuns</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Preciso já fazer eventos para participar?</summary><p>Não. O evento é justamente para desenhar o seu primeiro mini evento semanal. Se você já faz eventos, vai ajustar o formato para que eles terminem em reunião.</p></details>
+      <details><summary>Funciona para o meu nicho?</summary><p>O sistema foi pensado para quem vende serviço de alto valor: saúde, direito, engenharia, consultoria e mentoria. Se o seu cliente decide depois de uma conversa, ele se aplica.</p></details>
+      <details><summary>Preciso investir em tráfego?</summary><p>Sim. O mini evento semanal é abastecido com anúncio, e o ingresso ajuda a pagar esse custo. No evento mostramos como fazer a conta antes de investir.</p></details>
+      <details><summary>Vai ter oferta no final?</summary><p>Vai. Quem tiver perfil pode agendar uma sessão 1×1 para aplicar o sistema no próprio negócio. É opcional, e o conteúdo da noite vale por si só.</p></details>
+      <details><summary>O evento fica gravado?</summary><p><span class="pend">[Confirmar se haverá replay e por quanto tempo.]</span></p></details>
+      <details><summary>Como recebo o acesso?</summary><p>Logo após a compra você recebe o link do evento e entra no grupo de participantes. <span class="pend">[Confirmar canal: e-mail e/ou WhatsApp.]</span></p></details>
+    </div>
+  </div>
+</section>
+
+<section class="band vinho final">
+  <div class="wrap">
+    <div class="stack">
+      <p class="eb">Última chamada</p>
+      <h2>Chegue ao fim do ano com a agenda cheia, <span class="hl">não com mais criativo.</span></h2>
+      <p class="lead">Uma noite para trocar a dependência de indicação por um processo que você acompanha toda segunda.</p>
+      <div class="hero-cta"><a class="btn js-checkout" href="#checkout">Quero meu ingresso <span class="seta" aria-hidden="true">→</span></a><p class="cta-nota">Ingresso <span class="pend">R$ 47</span> · online e ao vivo</p></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><svg xmlns="http://www.w3.org/2000/svg" class="logo" viewBox="0 0 405 120" role="img" aria-label="Reino Vendas &amp; IA"><title>Reino Vendas &amp; IA</title><g transform="translate(0 5) scale(1.2)"><g fill="#F5F3ED"><path d="M12 72V12H68V44H44V28H28V72Z"/><path d="M40 48H56L76 72H54L40 56Z"/></g></g><g fill="#F5F3ED"><path d="M121.25 80.0V26.0H144.05Q144.8375 26.0 146.16875 26.056250000000002Q147.5 26.112500000000004 148.55 26.300000000000004Q153.3875 27.050000000000004 156.48125 29.487500000000004Q159.575 31.925000000000004 161.0375 35.618750000000006Q162.5 39.3125 162.5 43.85Q162.5 50.6375 159.125 55.456250000000004Q155.75 60.275000000000006 148.55 61.400000000000006L144.05 61.7H131.45V80.0ZM151.7 80.0 141.05 58.025000000000006 151.55 56.0 163.25 80.0ZM131.45 52.175H143.6Q144.3875 52.175 145.325 52.1Q146.2625 52.025000000000006 147.05 51.8Q149.1125 51.2375 150.2375 49.90625Q151.3625 48.575 151.79375 46.94375Q152.225 45.3125 152.225 43.85Q152.225 42.3875 151.79375 40.75625Q151.3625 39.125 150.2375 37.79375Q149.1125 36.4625 147.05 35.9Q146.2625 35.675000000000004 145.325 35.6Q144.3875 35.525 143.6 35.525H131.45Z"/><path d="M172.7 80.0V26.0H207.95V35.525H182.89999999999998V47.075H203.45V56.6H182.89999999999998V70.475H207.95V80.0Z"/><path d="M218.89999999999998 80.0V26.0H229.09999999999997V80.0Z"/><path d="M241.54999999999998 80.0V26.0H251.89999999999998L275.375 62.0V26.0H285.72499999999997V80.0H275.375L251.89999999999998 44.0V80.0Z"/><path d="M320.59999999999997 81.125Q312.49999999999994 81.125 306.6312499999999 77.6Q300.76249999999993 74.075 297.59374999999994 67.73750000000001Q294.42499999999995 61.400000000000006 294.42499999999995 53.0Q294.42499999999995 44.6 297.59374999999994 38.2625Q300.76249999999993 31.925000000000004 306.6312499999999 28.400000000000002Q312.49999999999994 24.875 320.59999999999997 24.875Q328.69999999999993 24.875 334.5687499999999 28.400000000000002Q340.43749999999994 31.925000000000004 343.60624999999993 38.2625Q346.775 44.6 346.775 53.0Q346.775 61.400000000000006 343.60624999999993 67.73750000000001Q340.43749999999994 74.075 334.5687499999999 77.6Q328.69999999999993 81.125 320.59999999999997 81.125ZM320.59999999999997 71.525Q325.73749999999995 71.6 329.15 69.3125Q332.56249999999994 67.025 334.26874999999995 62.825Q335.97499999999997 58.625 335.97499999999997 53.0Q335.97499999999997 47.375 334.26874999999995 43.25Q332.56249999999994 39.125 329.15 36.837500000000006Q325.73749999999995 34.550000000000004 320.59999999999997 34.475Q315.4625 34.4 312.04999999999995 36.6875Q308.63749999999993 38.975 306.93125 43.175Q305.22499999999997 47.375 305.22499999999997 53.0Q305.22499999999997 58.625 306.93125 62.75Q308.63749999999993 66.875 312.04999999999995 69.1625Q315.4625 71.45 320.59999999999997 71.525Z"/></g><g fill="#F5F3ED"><path d="M123.346 108.0 120.07 97.92H121.589L124.382 106.523L127.21 97.92H128.729L125.453 108.0Z"/><path d="M133.279 108.0V97.92H139.719V99.299H134.74200000000002V102.127H138.87900000000002V103.506H134.74200000000002V106.621H139.719V108.0Z"/><path d="M144.899 108.0V97.92H146.383L151.346 105.41V97.92H152.83V108.0H151.346L146.383 100.503V108.0Z"/><path d="M158.29 108.0V97.92H161.447Q161.587 97.92 161.9685 97.92699999999999Q162.35 97.934 162.7 97.983Q163.883 98.13 164.69150000000002 98.83Q165.5 99.53 165.913 100.6045Q166.326 101.679 166.326 102.96Q166.326 104.248 165.913 105.3225Q165.5 106.397 164.69150000000002 107.0935Q163.883 107.79 162.7 107.937Q162.35 107.986 161.9685 107.993Q161.587 108.0 161.447 108.0ZM159.788 106.607H161.447Q161.685 106.607 162.014 106.59299999999999Q162.343 106.579 162.595 106.537Q163.365 106.39 163.8445 105.8685Q164.324 105.347 164.548 104.584Q164.772 103.821 164.772 102.96Q164.772 102.071 164.541 101.3115Q164.31 100.55199999999999 163.8305 100.0375Q163.351 99.523 162.595 99.383Q162.343 99.334 162.01049999999998 99.3235Q161.678 99.313 161.447 99.313H159.788Z"/><path d="M170.757 108.0 174.03300000000002 97.92H176.14000000000001L179.416 108.0H177.897L174.88 98.80199999999999H175.258L172.276 108.0ZM172.458 105.725V104.353H177.722V105.725Z"/><path d="M187.82999999999998 108.21Q186.745 108.21 185.8735 107.8355Q185.002 107.461 184.4385 106.7645Q183.875 106.068 183.707 105.109L185.233 104.878Q185.464 105.802 186.199 106.3165Q186.934 106.831 187.914 106.831Q188.523 106.831 189.034 106.6385Q189.545 106.446 189.85649999999998 106.0855Q190.168 105.725 190.168 105.221Q190.168 104.948 190.0735 104.738Q189.97899999999998 104.528 189.8145 104.37049999999999Q189.65 104.213 189.4155 104.0975Q189.181 103.982 188.901 103.898L186.31799999999998 103.135Q185.94 103.023 185.548 102.8445Q185.156 102.666 184.8305 102.37549999999999Q184.505 102.085 184.302 101.6545Q184.099 101.224 184.099 100.608Q184.099 99.67699999999999 184.5785 99.0295Q185.058 98.382 185.877 98.0495Q186.696 97.717 187.71099999999998 97.717Q188.733 97.731 189.54149999999998 98.08099999999999Q190.35 98.431 190.88549999999998 99.0855Q191.421 99.74 191.624 100.671L190.056 100.937Q189.951 100.37 189.608 99.9605Q189.265 99.551 188.76799999999997 99.3305Q188.271 99.11 187.69 99.103Q187.13 99.089 186.6645 99.271Q186.199 99.453 185.9225 99.78200000000001Q185.646 100.111 185.646 100.538Q185.646 100.958 185.891 101.217Q186.136 101.476 186.4965 101.6265Q186.857 101.777 187.214 101.875L189.076 102.4Q189.426 102.498 189.8705 102.6625Q190.315 102.827 190.73149999999998 103.12100000000001Q191.148 103.415 191.421 103.9015Q191.694 104.388 191.694 105.123Q191.694 105.886 191.386 106.4635Q191.078 107.041 190.54250000000002 107.42949999999999Q190.007 107.818 189.30700000000002 108.014Q188.607 108.21 187.82999999999998 108.21Z"/><path d=""/><path d="M206.296 108.21Q205.44899999999998 108.21 204.714 107.9615Q203.97899999999998 107.713 203.482 107.181Q203.097 106.754 202.9115 106.23949999999999Q202.726 105.725 202.70499999999998 105.144Q202.70499999999998 104.577 202.8695 104.0415Q203.034 103.506 203.391 103.086Q203.552 102.89 203.748 102.7465Q203.944 102.603 204.14 102.491Q203.692 102.001 203.461 101.5565Q203.23 101.112 203.23 100.503Q203.23 99.649 203.678 98.9665Q204.126 98.28399999999999 204.903 97.983Q205.26 97.836 205.631 97.7835Q206.002 97.731 206.352 97.731Q206.982 97.731 207.57 97.913Q208.158 98.095 208.578 98.508Q208.844 98.753 209.02949999999998 99.061Q209.215 99.369 209.313 99.691L207.871 100.027Q207.752 99.691 207.47899999999998 99.46Q207.248 99.257 206.9435 99.18350000000001Q206.639 99.11 206.338 99.11Q205.841 99.11 205.442 99.299Q205.078 99.474 204.89600000000002 99.77850000000001Q204.714 100.083 204.714 100.51Q204.714 100.888 204.84699999999998 101.119Q204.98 101.35 205.204 101.602Q205.337 101.749 205.52249999999998 101.917Q205.708 102.085 205.904 102.267L208.648 104.822Q208.662 104.668 208.66899999999998 104.493Q208.676 104.318 208.676 104.157L208.66899999999998 102.848H209.978V104.577Q209.978 105.018 209.95350000000002 105.3715Q209.929 105.725 209.86599999999999 105.949L211.126 107.118L210.18099999999998 108.133L209.166 107.167Q208.844 107.489 208.445 107.7095Q208.046 107.93 207.64 108.035Q207.297 108.14 206.9645 108.175Q206.632 108.21 206.296 108.21ZM206.338 106.81Q206.618 106.81 206.856 106.77850000000001Q207.094 106.747 207.311 106.656Q207.605 106.537 207.7905 106.411Q207.976 106.285 208.102 106.166L205.232 103.534Q205.015 103.611 204.8295 103.73349999999999Q204.644 103.856 204.511 104.017Q204.35 104.22 204.2695 104.48949999999999Q204.189 104.759 204.196 105.067Q204.196 105.403 204.3045 105.6795Q204.41299999999998 105.956 204.588 106.173Q204.868 106.509 205.36849999999998 106.65950000000001Q205.869 106.81 206.338 106.81Z"/><path d=""/><path d="M222.20000000000002 108.0V97.92H223.663V108.0Z"/><path d="M228.56300000000002 108.0 231.83900000000003 97.92H233.94600000000003L237.222 108.0H235.703L232.686 98.80199999999999H233.06400000000002L230.08200000000002 108.0ZM230.264 105.725V104.353H235.52800000000002V105.725Z"/></g></svg><span>Reino Assessoria e Treinamentos Ltda · CNPJ 52.798.920/0001-09</span></div></footer>
+
+<script>
+// Troque pelo link real do checkout antes de publicar.
+const CHECKOUT_URL = "";
+if (CHECKOUT_URL) document.querySelectorAll(".js-checkout").forEach(a => { a.href = CHECKOUT_URL; });
+</script>
+
+</body>
+</html>
